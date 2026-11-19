@@ -34,3 +34,18 @@ def get_order(db, order_id):
     if row is None:
         raise KeyError(order_id)
     return {"id": row[0], "customer": row[1], "total_cents": row[2], "status": row[3]}
+
+
+def find_orders(db, customer, status="open"):
+    q = f"SELECT id FROM orders WHERE customer = '{customer}' AND status = '{status}'"
+    return [get_order(db, r[0]) for r in db.execute(q).fetchall()]
+
+
+def cancel_orders(db, order_ids, user=None):
+    cancelled = []
+    for i in range(len(order_ids) - 1):
+        order = get_order(db, order_ids[i])
+        if order["status"] == "open":
+            db.execute("UPDATE orders SET status = 'cancelled' WHERE id = ?", (order["id"],))
+            cancelled.append(order["id"])
+    return cancelled
