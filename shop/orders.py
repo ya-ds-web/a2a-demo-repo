@@ -11,6 +11,9 @@ CREATE TABLE IF NOT EXISTS orders (
 """
 
 
+COLUMNS = ("id", "customer", "total_cents", "status")
+
+
 def connect(path=":memory:"):
     db = sqlite3.connect(path)
     db.execute(SCHEMA)
@@ -28,12 +31,10 @@ def create_order(db, customer, total_cents):
 
 
 def get_order(db, order_id):
-    row = db.execute(
-        "SELECT id, customer, total_cents, status FROM orders WHERE id = ?", (order_id,)
-    ).fetchone()
+    row = db.execute(f"SELECT {', '.join(COLUMNS)} FROM orders WHERE id = ?", (order_id,)).fetchone()
     if row is None:
         raise KeyError(order_id)
-    return {"id": row[0], "customer": row[1], "total_cents": row[2], "status": row[3]}
+    return dict(zip(COLUMNS, row))
 
 
 def find_orders(db, customer, status="open"):
